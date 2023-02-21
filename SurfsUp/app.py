@@ -68,7 +68,8 @@ def prcp():
         prcp_dict["prcp"] = prcp
 
         all_prcp.append(prcp_dict)
-        session.close()
+        
+    session.close()
 
     return jsonify(all_prcp)
 
@@ -80,8 +81,8 @@ def stations():
 
     all_stations=session.query(Station.station).all()
     lst_stations = list(np.ravel(all_stations))
+    
     session.close()
-
 
     return jsonify(lst_stations)
 
@@ -108,7 +109,8 @@ def temp_obs():
         tobs_dict["tobs"] = tobs
 
         all_tobs.append(tobs_dict)
-        session.close()
+        
+    session.close()
 
     return jsonify(all_tobs)
 
@@ -124,6 +126,7 @@ def start_tobs(start):
         filter(Measurement.date >= start_date) \
         .all()
     lst_tobs = list(np.ravel(temp_obs))
+    
     session.close()
 
     return jsonify(lst_tobs)
@@ -143,6 +146,7 @@ def st_end_tobs(start, end):
         filter(Measurement.date <= end_date).all()
     
     lst_tobs = list(np.ravel(temp_obs))
+    
     session.close()
 
     return jsonify(lst_tobs)
