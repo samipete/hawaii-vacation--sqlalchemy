@@ -52,11 +52,13 @@ def welcome():
 @app.route("/api/v1.0/precipitation")
 # define a function that converts the precipitation analysis (ie the last 12 months)
 def prcp():
+    session = Session(engine)
+
    # find one year ago from most recent date in data set
     one_yr_back = dt.date(2017, 8, 23) - dt.timedelta(days=365)
     # query
-    preci_data = session.query(Station.name, Measurement.date, Measurement.prcp).\
-    filter(Measurement.date >= "2016-01-01", Measurement.date <= "2017-01-01").\
+    preci_data = session.query(Measurement.date, Measurement.prcp).\
+    filter (Measurement.date >= one_yr_back).\
     order_by (Measurement.date).all()
     # return as jsonified dictionary  
     all_prcp = []
@@ -66,8 +68,7 @@ def prcp():
         prcp_dict["prcp"] = prcp
 
         all_prcp.append(prcp_dict)
-
-    session.close()
+        session.close()
 
     return jsonify(all_prcp)
 
@@ -75,16 +76,20 @@ def prcp():
 @app.route("/api/v1.0/stations")
  # define a function that will show all stations and return jsonified list
 def stations():
+    session = Session(engine)
+
     all_stations=session.query(Station.station).all()
     lst_stations = list(np.ravel(all_stations))
-    
     session.close()
+
 
     return jsonify(lst_stations)
 
 # route for tobs (temperature observations)
 @app.route("/api/v1.0/tobs")
 def temp_obs():
+    session = Session(engine)
+
     # identify previous year obsevations 
     mst_rct_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()[0]
     mst_rct_date = dt.datetime.strptime(mst_rct_date, '%Y-%m-%d')
@@ -103,14 +108,15 @@ def temp_obs():
         tobs_dict["tobs"] = tobs
 
         all_tobs.append(tobs_dict)
-
-    session.close()
+        session.close()
 
     return jsonify(all_tobs)
 
 # route for start
 @app.route("/api/v1.0/<start>")
 def start_tobs(start):
+    session = Session(engine)
+
     # write the function and query that allows the user to input a dynamic start date (return in json format)
     start_date = dt.datetime.strptime(start, "%Y%m%d")
     # find the min max and avg temperatures from the specified start date
@@ -118,7 +124,6 @@ def start_tobs(start):
         filter(Measurement.date >= start_date) \
         .all()
     lst_tobs = list(np.ravel(temp_obs))
-
     session.close()
 
     return jsonify(lst_tobs)
@@ -127,16 +132,17 @@ def start_tobs(start):
 @app.route("/api/v1.0/<start>/<end>")
 # define a function that will allow user to set a specific start and end date
 def st_end_tobs(start, end):
+    session = Session(engine)
+
     start_date = dt.datetime.strptime(start, "%Y%m%d")
     end_date = dt.datetime.strptime(end, "%Y%m%d")
 
-    # query the min max and average tobs for the identified start/end date and return as jsonified list
+    # query the min max and average temp for the identified start/end date and return as jsonified list
     temp_obs=session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
         filter(Measurement.date >= start_date).\
         filter(Measurement.date <= end_date).all()
     
     lst_tobs = list(np.ravel(temp_obs))
-
     session.close()
 
     return jsonify(lst_tobs)
